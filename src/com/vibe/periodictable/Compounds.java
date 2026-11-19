@@ -1,5 +1,7 @@
 package com.vibe.periodictable;
 
+import java.util.Arrays;
+
 public final class Compounds {
 
     static final String[] NAMES = {
@@ -56,7 +58,8 @@ public final class Compounds {
     }
 
     static int[] composition(int index) {
-        return parse(FORMULAS[index]);
+        int[] parsed = parse(FORMULAS[index]);
+        return Arrays.copyOf(parsed, parsed.length);
     }
 
     static int[] parse(String formula) {

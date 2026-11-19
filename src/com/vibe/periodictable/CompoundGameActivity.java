@@ -83,9 +83,10 @@ public class CompoundGameActivity extends Activity {
         content.addView(sub);
         addSpacer(content, 12);
 
-        content.addView(targetView = label("Hedef madde", TEXT_DIM, 13));
+        content.addView(label("Hedef madde", TEXT_DIM, 13));
         addSpacer(content, 4);
 
+        targetView = new TextView(this);
         LinearLayout targetCard = new LinearLayout(this);
         targetCard.setGravity(Gravity.CENTER);
         targetCard.setPadding(dp(14), dp(14), dp(14), dp(14));
