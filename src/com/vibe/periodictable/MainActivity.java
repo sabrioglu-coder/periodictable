@@ -2,6 +2,7 @@ package com.vibe.periodictable;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -45,11 +46,36 @@ public class MainActivity extends Activity {
         content.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("118 element · ayrıntı için dokunun");
+        subtitle.setText("Bölüm 1: 118 element · ayrıntı için dokunun");
         subtitle.setTextColor(TEXT_DIM);
         subtitle.setTextSize(13);
         subtitle.setPadding(0, dp(2), 0, dp(12));
         content.addView(subtitle);
+
+        TextView gameButton = new TextView(this);
+        gameButton.setText("🧪 Madde Ustası — bölüme oyna!");
+        gameButton.setTextColor(0xFF10141A);
+        gameButton.setTextSize(15);
+        gameButton.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        gameButton.setGravity(Gravity.CENTER);
+        gameButton.setPadding(dp(10), dp(14), dp(10), dp(14));
+        GradientDrawable gbg = new GradientDrawable();
+        gbg.setColor(0xFFAED581);
+        gbg.setCornerRadius(dp(12));
+        gameButton.setBackground(gbg);
+        gameButton.setClickable(true);
+        gameButton.setFocusable(true);
+        gameButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, CompoundGameActivity.class));
+            }
+        });
+        content.addView(gameButton, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        LinearLayout.LayoutParams glp = (LinearLayout.LayoutParams) gameButton.getLayoutParams();
+        glp.bottomMargin = dp(12);
+        gameButton.setLayoutParams(glp);
 
         content.addView(buildTable());
         content.addView(buildLegend());
@@ -78,6 +104,10 @@ public class MainActivity extends Activity {
     }
 
     private static int rowSlot(int row) {
+        return gridRow(row);
+    }
+
+    static int gridRow(int row) {
         return row <= 8 ? row - 1 : row;
     }
 
