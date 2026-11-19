@@ -12,6 +12,8 @@
 - 100 basit madde: hedef madde adı gösterilir (örn. Su)
 - Oyuncu tablodan atomları dokunarak kaba ekler, "Oluştur" ile dener
 - Doğru oran → madde oluşur, skor artar; yanlışsa uyarı
+- "🪄 Sen Oluştur": çözemezsen uygulama atomları formül sırasıyla kaba atar, maddeyi oluşturur ve otomatik sonrakine geçer
+- Giriş ekranında 🌐 EN / TR dil düğmesi (tercih hatırlanır; 118 element ve 100 madde adı dahil)
 - Atolar başka bir maddeye denk gelirse program onu da söyler (örn. "Bu atomlar Amonyak oluşturur!")
 - İpucu formülü gösterir
 - Android 7.0+ (minSdk 24) desteği, imzalı `PeriyodikTablo.apk`

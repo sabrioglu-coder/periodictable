@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.view.Gravity;
 import android.view.View;
@@ -15,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class CompoundGameActivity extends Activity {
@@ -29,10 +32,12 @@ public class CompoundGameActivity extends Activity {
 
     private final int[] beaker = new int[119];
     private final Random random = new Random();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     private int target;
     private int score;
     private boolean hintShown;
+    private boolean solving;
 
     private TextView targetView;
     private TextView scoreView;
@@ -60,7 +65,7 @@ public class CompoundGameActivity extends Activity {
         header.setGravity(Gravity.CENTER_VERTICAL);
 
         TextView title = new TextView(this);
-        title.setText("🧪 Madde Ustası");
+        title.setText(L10n.pick(this, "⚗️ Simya Ustası", "⚗️ Alchemy Master"));
         title.setTextColor(TEXT_MAIN);
         title.setTextSize(22);
         title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
@@ -77,13 +82,15 @@ public class CompoundGameActivity extends Activity {
         addSpacer(content, 2);
 
         TextView sub = new TextView(this);
-        sub.setText("İstenen maddeyi tablondan atomları seçerek kapta oluştur!");
+        sub.setText(L10n.pick(this,
+                "İstenen maddeyi tablondan atomları seçerek kapta oluştur!",
+                "Build the requested substance by picking atoms from the table!"));
         sub.setTextColor(TEXT_DIM);
         sub.setTextSize(13);
         content.addView(sub);
         addSpacer(content, 12);
 
-        content.addView(label("Hedef madde", TEXT_DIM, 13));
+        content.addView(label(L10n.pick(this, "Hedef madde", "Target substance"), TEXT_DIM, 13));
         addSpacer(content, 4);
 
         targetView = new TextView(this);
@@ -101,7 +108,7 @@ public class CompoundGameActivity extends Activity {
         content.addView(targetCard);
         addSpacer(content, 12);
 
-        content.addView(label("Kap (atom çıkarmak için dokun)", TEXT_DIM, 12));
+        content.addView(label(L10n.pick(this, "Kap (atom çıkarmak için dokun)", "Beaker (tap an atom to remove it)"), TEXT_DIM, 12));
         addSpacer(content, 4);
 
         LinearLayout beakerCard = new LinearLayout(this);
@@ -130,7 +137,7 @@ public class CompoundGameActivity extends Activity {
         content.addView(statusView);
         addSpacer(content, 10);
 
-        content.addView(label("Atom eklemek için tablodaki elemente dokun", TEXT_DIM, 12));
+        content.addView(label(L10n.pick(this, "Atom eklemek için tablodaki elemente dokun", "Tap an element in the table to add atoms"), TEXT_DIM, 12));
         addSpacer(content, 6);
         content.addView(buildGrid());
 
@@ -155,27 +162,34 @@ public class CompoundGameActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
 
-        row.addView(button("✅ Oluştur", GREEN, new View.OnClickListener() {
+        row.addView(button(L10n.pick(this, "✅ Oluştur", "✅ Create"), GREEN, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 tryCreate();
             }
         }), rowParams());
 
-        row.addView(button("🧹 Temizle", TEXT_DIM, new View.OnClickListener() {
+        row.addView(button(L10n.pick(CompoundGameActivity.this, "🧹 Temizle", "🧹 Clear"), TEXT_DIM, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 java.util.Arrays.fill(beaker, 0);
-                setStatus("Kap boşaltıldı.", TEXT_DIM);
+                setStatus(L10n.pick(CompoundGameActivity.this, "Kap boşaltıldı.", "Beaker emptied."), TEXT_DIM);
                 refreshBeaker();
             }
         }), rowParams());
 
-        row.addView(button("💡 İpucu", 0xFFFFB74D, new View.OnClickListener() {
+        row.addView(button(L10n.pick(CompoundGameActivity.this, "💡 İpucu", "💡 Hint"), 0xFFFFB74D, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 hintShown = true;
-                setStatus("İpucu → " + Compounds.pretty(Compounds.FORMULAS[target]), 0xFFFFB74D);
+                setStatus(L10n.pick(CompoundGameActivity.this, "İpucu → ", "Hint → ") + Compounds.pretty(Compounds.FORMULAS[target]), 0xFFFFB74D);
+            }
+        }), rowParams());
+
+        row.addView(button(L10n.pick(CompoundGameActivity.this, "🪄 Sen Oluştur", "🪄 Auto-create"), 0xFF64B5F6, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                autoSolve();
             }
         }), rowParams());
 
@@ -265,7 +279,7 @@ public class CompoundGameActivity extends Activity {
             }
         }
         beakerChips.setText(empty
-                ? "🧪 Boş — atom ekleyin"
+                ? L10n.pick(this, "🧪 Boş — atom ekleyin", "🧪 Empty — add atoms")
                 : Html.fromHtml("🧪  " + html.toString().trim()));
         beakerChips.setTextColor(TEXT_DIM);
         scoreView.setText("Skor: " + score);
@@ -278,6 +292,48 @@ public class CompoundGameActivity extends Activity {
         return true;
     }
 
+    private void autoSolve() {
+        if (solving) return;
+        solving = true;
+        java.util.Arrays.fill(beaker, 0);
+        refreshBeaker();
+        setStatus(L10n.pick(this,
+                "\ud83e\udeb4 Ben yapıyorum: " + L10n.compoundName(this, target) + "...",
+                "\ud83e\udeb4 Making: " + L10n.compoundName(this, target) + "..."), 0xFF64B5F6);
+
+        final ArrayList<Integer> units = Compounds.sequence(target);
+        final long step = 250L;
+        final int count = units.size();
+        for (int i = 0; i < count; i++) {
+            final int z = units.get(i);
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    beaker[z]++;
+                    setStatus(null, 0);
+                    refreshBeaker();
+                }
+            }, step * (i + 1));
+        }
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setStatus(L10n.pick(CompoundGameActivity.this,
+                        "\ud83e\udeb4 " + L10n.compoundName(CompoundGameActivity.this, target) + " ("
+                                + Compounds.pretty(Compounds.FORMULAS[target]) + ") oluştu! Sıradaki geliyor...",
+                        "\ud83e\udeb4 " + L10n.compoundName(CompoundGameActivity.this, target) + " ("
+                                + Compounds.pretty(Compounds.FORMULAS[target]) + ") created! Next one coming..."),
+                        GREEN);
+            }
+        }, step * count + 350L);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                nextTarget(true);
+            }
+        }, step * count + 1900L);
+    }
+
     private void tryCreate() {
         int[] inBeaker = new int[119];
         int total = 0;
@@ -286,7 +342,7 @@ public class CompoundGameActivity extends Activity {
             total += beaker[z];
         }
         if (total == 0) {
-            setStatus("⚠️ Kap boş! Önce atom ekleyin.", RED);
+            setStatus(L10n.pick(this, "⚠️ Kap boş! Önce atom ekleyin.", "⚠️ Beaker is empty! Add atoms first."), RED);
             return;
         }
         int[] wanted = Compounds.composition(target);
@@ -294,25 +350,31 @@ public class CompoundGameActivity extends Activity {
             score++;
             refreshBeaker();
             new AlertDialog.Builder(this)
-                    .setTitle("🎉 Doğru!")
-                    .setMessage(Compounds.NAMES[target] + " oluştu! ("
-                            + Compounds.pretty(Compounds.FORMULAS[target]) + ")\nSkor: " + score)
-                    .setPositiveButton("Sonraki madde ➜", null)
+                    .setTitle(L10n.pick(this, "🎉 Doğru!", "🎉 Correct!"))
+                    .setMessage(L10n.compoundName(this, target) + " " + L10n.pick(this, "oluştu! (", "created! (")
+                            + Compounds.pretty(Compounds.FORMULAS[target]) + ")\n" + L10n.pick(this, "Skor: ", "Score: ") + score)
+                    .setPositiveButton(L10n.pick(this, "Sonraki madde ➜", "Next substance ➜"), null)
                     .show();
             nextTarget(true);
         } else {
             for (int i = 0; i < Compounds.count(); i++) {
                 if (i != target && sameComposition(inBeaker, Compounds.composition(i))) {
-                    setStatus("⚠️ Bu atomlar \"" + Compounds.NAMES[i] + "\" oluşturur, "
-                            + "\"" + Compounds.NAMES[target] + "\" değil!", RED);
+                    setStatus(L10n.pick(this,
+                            "⚠️ Bu atomlar \"" + L10n.compoundName(this, i) + "\" oluşturur, \""
+                                    + L10n.compoundName(this, target) + "\" değil! (🪄 Sen Oluştur'u deneyin)",
+                            "⚠️ These atoms form \"" + L10n.compoundName(this, i) + "\", not "
+                                    + L10n.compoundName(this, target) + "\"! Try 🪄 Auto-create"), RED);
                     return;
                 }
             }
-            setStatus("⚠️ Bu atomlar \"" + Compounds.NAMES[target] + "\" oluşturmaz!", RED);
+            setStatus(L10n.pick(this,
+                        "⚠️ Bu atomlar \"" + L10n.compoundName(this, target) + "\" oluşturmaz! (🪄 Sen Oluştur'u deneyin)",
+                        "⚠️ These atoms do not form \"" + L10n.compoundName(this, target) + "\"! Try 🪄 Auto-create"), RED);
         }
     }
 
     private void nextTarget(boolean clear) {
+        handler.removeCallbacksAndMessages(null);
         int prev = target;
         int n = Compounds.count();
         int next = random.nextInt(n);
@@ -320,7 +382,8 @@ public class CompoundGameActivity extends Activity {
         target = next;
         if (clear) java.util.Arrays.fill(beaker, 0);
         hintShown = false;
-        targetView.setText(Compounds.NAMES[target]);
+        solving = false;
+        targetView.setText(L10n.compoundName(this, target));
         setStatus(null, 0);
         refreshBeaker();
     }

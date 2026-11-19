@@ -38,22 +38,51 @@ public class MainActivity extends Activity {
         root.addView(content, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+
         TextView title = new TextView(this);
-        title.setText("Periyodik Tablo");
+        title.setText(L10n.pick(this, "Periyodik Tablo", "Periodic Table"));
         title.setTextColor(TEXT_MAIN);
         title.setTextSize(24);
         title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        content.addView(title);
+        header.addView(title, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView langButton = new TextView(this);
+        langButton.setText(L10n.isEnglish(this) ? "🌐 TR" : "🌐 EN");
+        langButton.setTextColor(TEXT_MAIN);
+        langButton.setTextSize(13);
+        langButton.setGravity(Gravity.CENTER);
+        langButton.setPadding(dp(10), dp(6), dp(10), dp(6));
+        GradientDrawable langBg = new GradientDrawable();
+        langBg.setColor(0x33FFFFFF);
+        langBg.setCornerRadius(dp(14));
+        langButton.setBackground(langBg);
+        langButton.setClickable(true);
+        langButton.setFocusable(true);
+        langButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                L10n.setEnglish(MainActivity.this, !L10n.isEnglish(MainActivity.this));
+                recreate();
+            }
+        });
+        header.addView(langButton);
+        content.addView(header);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Bölüm 1: 118 element · ayrıntı için dokunun");
+        subtitle.setText(L10n.pick(this,
+                "Bölüm 1: 118 element · ayrıntı için dokunun",
+                "Part 1: 118 elements · tap any for details"));
         subtitle.setTextColor(TEXT_DIM);
         subtitle.setTextSize(13);
         subtitle.setPadding(0, dp(2), 0, dp(12));
         content.addView(subtitle);
 
         TextView gameButton = new TextView(this);
-        gameButton.setText("🧪 Madde Ustası — bölüme oyna!");
+        gameButton.setText(L10n.pick(this, "⚗️ Simya Ustası — bölüme oyna!", "⚗️ Alchemy Master — play!"));
         gameButton.setTextColor(0xFF10141A);
         gameButton.setTextSize(15);
         gameButton.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
@@ -140,9 +169,8 @@ public class MainActivity extends Activity {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(0, dp(14), 0, 0);
 
-        String[] names = ElementTable.CATEGORY_NAMES;
         int[] colors = ElementTable.CATEGORY_COLORS;
-        for (int i = 0; i < names.length; i++) {
+        for (int i = 0; i < ElementTable.CATEGORY_NAMES.length; i++) {
             LinearLayout chip = new LinearLayout(this);
             chip.setGravity(Gravity.CENTER_VERTICAL);
             chip.setPadding(dp(6), dp(4), dp(6), dp(4));
@@ -159,7 +187,7 @@ public class MainActivity extends Activity {
             chip.addView(dot, new LinearLayout.LayoutParams(dp(10), dp(10)));
 
             TextView label = new TextView(this);
-            label.setText(" " + names[i]);
+            label.setText(" " + L10n.categoryName(this, i));
             label.setTextColor(TEXT_DIM);
             label.setTextSize(11);
             chip.addView(label);
@@ -186,7 +214,7 @@ public class MainActivity extends Activity {
         box.addView(symbol);
 
         TextView name = new TextView(this);
-        name.setText(z + " · " + ElementTable.NAMES_TR[z - 1]);
+        name.setText(z + " · " + L10n.elementName(this, z));
         name.setTextColor(TEXT_MAIN);
         name.setTextSize(18);
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
@@ -195,21 +223,21 @@ public class MainActivity extends Activity {
 
         int r = ElementTable.row(z);
         String groupText = (r == 9 || r == 10)
-                ? "3 (f-blok dizisi)"
+                ? L10n.pick(this, "3 (f-blok dizisi)", "3 (f-block series)")
                 : String.valueOf(ElementTable.group(z));
 
-        box.addView(detail("Tür", ElementTable.category(z)));
-        box.addView(detail("Atom kütlesi", ElementTable.MASSES[z - 1] + " u"));
-        box.addView(detail("Periyot", String.valueOf(ElementTable.period(z))));
-        box.addView(detail("Grup", groupText));
-        box.addView(detail("Elektron dizilimi", ElementTable.electronConfig(z)));
+        box.addView(detail(L10n.pick(this, "Tür", "Type"), L10n.elementCategory(this, z)));
+        box.addView(detail(L10n.pick(this, "Atom kütlesi", "Atomic mass"), ElementTable.MASSES[z - 1] + " u"));
+        box.addView(detail(L10n.pick(this, "Periyot", "Period"), String.valueOf(ElementTable.period(z))));
+        box.addView(detail(L10n.pick(this, "Grup", "Group"), groupText));
+        box.addView(detail(L10n.pick(this, "Elektron dizilimi", "Electron configuration"), ElementTable.electronConfig(z)));
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(box);
 
         new AlertDialog.Builder(this)
                 .setView(scroll)
-                .setPositiveButton("Kapat", null)
+                .setPositiveButton(L10n.pick(this, "Kapat", "Close"), null)
                 .show();
     }
 

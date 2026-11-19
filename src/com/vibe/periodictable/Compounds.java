@@ -1,5 +1,6 @@
 package com.vibe.periodictable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public final class Compounds {
@@ -50,6 +51,29 @@ public final class Compounds {
             "CH3OH", "CH2O", "C3H6O", "C2H4(OH)2", "WC"
     };
 
+    static final String[] NAMES_EN = {
+            "Water", "Salt", "Ammonia", "Methane", "Carbon dioxide", "Carbon monoxide",
+            "Oxygen gas", "Nitrogen gas", "Hydrogen gas", "Chlorine gas",
+            "Hydrogen chloride", "Hydrogen peroxide", "Hydrogen sulfide", "Sulfur dioxide", "Sulfur trioxide",
+            "Nitrogen monoxide", "Nitrogen dioxide", "Laughing gas", "Phosphine", "Silane",
+            "Sulfuric acid", "Nitric acid", "Carbonic acid", "Hydrofluoric acid", "Hydrobromic acid",
+            "Hydroiodic acid", "Phosphoric acid", "Boric acid", "Acetic acid (vinegar)", "Caustic soda",
+            "Potassium hydroxide", "Limewater", "Milk of magnesia", "Aluminium hydroxide", "Iron(III) hydroxide",
+            "Ammonium hydroxide", "Quicklime", "Magnesium oxide", "Rust", "Magnetite",
+            "Alumina", "Copper(II) oxide", "Copper(I) oxide", "Zinc oxide", "Titanium white",
+            "Sand (silica)", "Manganese dioxide", "Chromium(III) oxide", "Nickel(II) oxide", "Lead(II) oxide",
+            "Mercury(II) oxide", "Limestone", "Baking soda", "Washing soda", "Potassium carbonate",
+            "Magnesium carbonate", "Urea", "Gypsum", "Epsom salt", "Blue vitriol",
+            "Green vitriol", "Zinc sulfate", "Glauber's salt", "Barite", "Lead sulfate",
+            "Alum", "Saltpeter", "Chile saltpeter", "Ammonium nitrate", "Silver nitrate",
+            "Calcium nitrate", "Lead nitrate", "Fluorite", "Sodium fluoride", "Lithium fluoride",
+            "Potassium chloride", "Calcium chloride", "Magnesium chloride", "Barium chloride", "Copper chloride",
+            "Iron(III) chloride", "Silver chloride", "Silver bromide", "Silver iodide", "Potassium iodide",
+            "Potassium bromide", "Sodium iodide", "Bleach", "Potassium permanganate", "Calcium hypochlorite",
+            "Hydrazine", "Acetylene", "Ethylene (ripening gas)", "Ethane", "Propane",
+            "Methanol (wood spirit)", "Formaldehyde", "Acetone", "Antifreeze", "Tungsten carbide"
+    };
+
     private Compounds() {
     }
 
@@ -60,6 +84,40 @@ public final class Compounds {
     static int[] composition(int index) {
         int[] parsed = parse(FORMULAS[index]);
         return Arrays.copyOf(parsed, parsed.length);
+    }
+
+    static ArrayList<Integer> sequence(int index) {
+        ArrayList<ArrayList<Integer>> stack = new ArrayList<ArrayList<Integer>>();
+        stack.add(new ArrayList<Integer>());
+        String f = FORMULAS[index];
+        int i = 0;
+        while (i < f.length()) {
+            char c = f.charAt(i);
+            if (c == '(') {
+                stack.add(new ArrayList<Integer>());
+                i++;
+            } else if (c == ')') {
+                i++;
+                int[] num = readNumber(f, i);
+                i = num[1];
+                int mult = num[0] == 0 ? 1 : num[0];
+                ArrayList<Integer> inner = stack.remove(stack.size() - 1);
+                for (int m = 0; m < mult; m++) {
+                    stack.get(stack.size() - 1).addAll(inner);
+                }
+            } else {
+                int z = readSymbol(f, i);
+                String sym = ElementTable.SYMBOLS[z - 1];
+                i += sym.length();
+                int[] num = readNumber(f, i);
+                i = num[1];
+                int mult = num[0] == 0 ? 1 : num[0];
+                for (int m = 0; m < mult; m++) {
+                    stack.get(stack.size() - 1).add(z);
+                }
+            }
+        }
+        return stack.get(0);
     }
 
     static int[] parse(String formula) {
